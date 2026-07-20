@@ -1,0 +1,19 @@
+---
+# Provisions a fresh Ubuntu host with everything needed to build, run, and
+# CI/CD-deploy this application: Git, Node.js, Docker, Nginx, and Jenkins.
+#
+# Usage:
+#   ansible-playbook -i ansible/inventory.ini ansible/playbook.yml --ask-become-pass
+
+- name: Provision portfolio application server
+  hosts: app_servers
+  become: true
+  vars:
+    node_major_version: "22"
+
+  roles:
+    - role: git
+    - role: docker
+    - role: nodejs
+    - role: nginx
+    - role: jenkins

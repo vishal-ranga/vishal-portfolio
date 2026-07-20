@@ -1,0 +1,24 @@
+# Development stack — runs `next dev` inside the container with the source
+# tree bind-mounted in, so edits on the host hot-reload immediately.
+#
+# Usage (from the repository root):
+#   docker compose -f docker/docker-compose.dev.yml up --build
+
+services:
+  app-dev:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: deps
+    image: portfolio:dev
+    container_name: portfolio-app-dev
+    working_dir: /app
+    command: sh -c "npm run dev"
+    environment:
+      NODE_ENV: development
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../:/app
+      - /app/node_modules
+      - /app/.next

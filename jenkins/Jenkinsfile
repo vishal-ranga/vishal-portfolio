@@ -1,0 +1,133 @@
+// Declarative Jenkins pipeline for the portfolio application.
+//
+// Stages: Checkout -> Install -> Lint -> Type Check -> Build -> Docker Build
+//         -> Docker Push (placeholder) -> Deploy (placeholder)
+//
+// Designed to run on an agent with Node.js 22 and Docker available
+// (see ansible/playbook.yml for provisioning such an agent).
+
+pipeline {
+    agent any
+
+    options {
+        timestamps()
+        disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        timeout(time: 30, unit: 'MINUTES')
+    }
+
+    environment {
+        APP_NAME        = 'portfolio'
+        IMAGE_NAME      = "${APP_NAME}"
+        IMAGE_TAG       = "${env.BUILD_NUMBER}"
+        // Populate these in Jenkins > Manage Credentials, then reference
+        // them here instead of hardcoding a registry.
+        REGISTRY_CREDS  = 'dockerhub-credentials'
+        REGISTRY        = 'docker.io/YOUR_DOCKERHUB_USERNAME'
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm ci --no-audit --no-fund'
+            }
+        }
+
+        stage('Lint') {
+            steps {
+                sh 'npm run lint'
+            }
+        }
+
+        stage('Type Check') {
+            steps {
+                sh 'npx tsc --noEmit'
+            }
+        }
+
+        stage('Test') {
+            when {
+                // No test suite is committed yet — this stage becomes a
+                // real gate the moment `npm test` exists in package.json.
+                expression { return fileExists('package.json') && sh(script: "grep -q '\"test\"' package.json", returnStatus: true) == 0 }
+            }
+            steps {
+                sh 'npm test -- --ci'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'npm run build'
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                sh """
+                    docker build \
+                      -f docker/Dockerfile \
+                      -t ${IMAGE_NAME}:${IMAGE_TAG} \
+                      -t ${IMAGE_NAME}:latest \
+                      .
+                """
+            }
+        }
+
+        stage('Docker Push') {
+            when {
+                branch 'main'
+            }
+            steps {
+                // Placeholder: wire up real registry credentials before
+                // enabling this in a live environment.
+                withCredentials([usernamePassword(
+                    credentialsId: env.REGISTRY_CREDS,
+                    usernameVariable: 'REG_USER',
+                    passwordVariable: 'REG_PASS'
+                )]) {
+                    sh """
+                        echo "\$REG_PASS" | docker login ${REGISTRY} -u "\$REG_USER" --password-stdin
+                        docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+                        docker tag ${IMAGE_NAME}:latest ${REGISTRY}/${IMAGE_NAME}:latest
+                        docker push ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+                        docker push ${REGISTRY}/${IMAGE_NAME}:latest
+                    """
+                }
+            }
+        }
+
+        stage('Deploy') {
+            when {
+                branch 'main'
+            }
+            steps {
+                // Placeholder: replace with the real deployment command —
+                // e.g. `kubectl set image deployment/portfolio ...`,
+                // an Ansible playbook run, or a Vercel deploy hook.
+                echo "Deploy stage placeholder — wire up kubectl / ansible-playbook / Vercel CLI here."
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Build #${env.BUILD_NUMBER} succeeded for ${env.APP_NAME}."
+            // e.g. slackSend(color: 'good', message: "✅ ${APP_NAME} build #${env.BUILD_NUMBER} succeeded")
+        }
+        failure {
+            echo "Build #${env.BUILD_NUMBER} failed for ${env.APP_NAME}."
+            // e.g. slackSend(color: 'danger', message: "❌ ${APP_NAME} build #${env.BUILD_NUMBER} failed")
+        }
+        always {
+            cleanWs()
+        }
+    }
+}

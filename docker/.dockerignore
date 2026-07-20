@@ -1,0 +1,33 @@
+# Dependencies
+node_modules
+npm-debug.log*
+
+# Next.js build output
+.next
+out
+
+# Environment files (never bake secrets into an image)
+.env
+.env.*
+!.env.example
+
+# Version control / IDE / OS
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
+
+# Docs that don't affect the runtime image
+README.md
+SETUP_GUIDE.md
+docs
+*.md
+
+# DevOps configs that aren't needed inside the app image
+docker
+k8s
+ansible
+terraform
+jenkins
+.github

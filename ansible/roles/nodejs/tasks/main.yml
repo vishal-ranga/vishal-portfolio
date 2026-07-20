@@ -1,0 +1,21 @@
+---
+- name: Add NodeSource GPG key and repository
+  shell: |
+    curl -fsSL https://deb.nodesource.com/setup_{{ node_major_version }}.x | bash -
+  args:
+    creates: /etc/apt/sources.list.d/nodesource.list
+
+- name: Install Node.js
+  apt:
+    name: nodejs
+    state: present
+    update_cache: true
+
+- name: Verify Node.js installation
+  command: node --version
+  register: node_version_output
+  changed_when: false
+
+- name: Show installed Node.js version
+  debug:
+    msg: "Installed {{ node_version_output.stdout }}"

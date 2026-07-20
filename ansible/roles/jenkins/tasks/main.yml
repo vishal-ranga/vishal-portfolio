@@ -1,0 +1,38 @@
+---
+- name: Install Java (required by Jenkins)
+  apt:
+    name: fontconfig openjdk-21-jre
+    state: present
+
+- name: Add Jenkins GPG key
+  get_url:
+    url: https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+    dest: /usr/share/keyrings/jenkins-keyring.asc
+    mode: "0644"
+
+- name: Add Jenkins apt repository
+  apt_repository:
+    repo: >-
+      deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc]
+      https://pkg.jenkins.io/debian-stable binary/
+    state: present
+    filename: jenkins
+
+- name: Install Jenkins
+  apt:
+    name: jenkins
+    state: present
+    update_cache: true
+
+- name: Ensure Jenkins is enabled and running
+  systemd:
+    name: jenkins
+    enabled: true
+    state: started
+
+- name: Allow Jenkins through the firewall (if ufw is active)
+  ufw:
+    rule: allow
+    port: "8080"
+    proto: tcp
+  ignore_errors: true
