@@ -26,7 +26,7 @@ WORKDIR /app
 # Only copy the manifest files first so Docker can cache this layer and
 # skip `npm install` entirely on rebuilds where dependencies didn't change.
 COPY package.json package-lock.json ./
-RUN npm ci --no-audit --no-fund
+RUN npm install --no-audit --no-fund
 
 # ── Stage 2: build ──────────────────────────────────────────────────────
 FROM node:${NODE_VERSION} AS builder

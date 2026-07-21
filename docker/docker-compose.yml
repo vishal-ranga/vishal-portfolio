@@ -43,7 +43,25 @@ services:
       - ../nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
       - portfolio-net
+  jenkins:
+    image: custom-jenkins:latest
+    container_name: jenkins
+    restart: unless-stopped
+
+    ports:
+      - "8081:8080"
+      - "50000:50000"
+
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+
+    networks:
+      - portfolio-net
 
 networks:
   portfolio-net:
     driver: bridge
+    
+volumes:
+  jenkins_home:
