@@ -36,7 +36,18 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'npm ci --no-audit --no-fund'
+                sh '''
+                pwd
+                ls -la
+                node -v
+                npm -v
+
+                cat package.json | head -20
+
+                ls -la package-lock.json
+
+                npm ci --no-audit --no-fund
+                '''
             }
         }
 
