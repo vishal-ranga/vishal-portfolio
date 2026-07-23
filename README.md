@@ -248,6 +248,3 @@ lengths, see **[`docs/resume-project-description.md`](docs/resume-project-descri
 
 Built by [Vishal Ranga](https://github.com/vishal-ranga) ·
 [LinkedIn](https://www.linkedin.com/in/vishal-ranga-8a5403274)
-
-
-writing this line just to test jenkins working
